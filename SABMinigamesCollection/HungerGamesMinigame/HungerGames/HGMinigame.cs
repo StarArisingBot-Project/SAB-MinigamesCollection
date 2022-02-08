@@ -23,7 +23,6 @@ namespace StarArisingBot.Minigames.HungerGames
         public HGItemsController ItemsController { get; private set; }
         public HGCommandsController CommandsController { get; private set; }
 
-
         private List<DiscordUser> UsersAmount { get; set; }
         private int PlayersAmount { get; set; }
 

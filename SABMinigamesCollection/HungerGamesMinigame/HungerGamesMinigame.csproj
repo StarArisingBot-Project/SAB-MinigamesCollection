@@ -9,7 +9,12 @@
 		<PackageReference Include="DSharpPlus.CommandsNext" Version="4.2.0-nightly-01067" />
 		<PackageReference Include="DSharpPlus.Interactivity" Version="4.2.0-nightly-01067" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-		<PackageReference Include="Starciad.SABMinigameEngine" Version="1.0.1" />
 		<PackageReference Include="System.Drawing.Common" Version="6.0.2-mauipre.1.22054.8" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="SABMinigameEngine">
+	    <HintPath>..\..\..\SAB-MinigameEngine\SABMinigameEngine\SABMinigameEngine\bin\Release\net5.0\SABMinigameEngine.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 </Project>
