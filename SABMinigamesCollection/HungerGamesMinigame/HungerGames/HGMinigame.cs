@@ -2,6 +2,7 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using StarArisingBot.MinigameEngine;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,7 +37,7 @@ namespace StarArisingBot.Minigames.HungerGames
             ChannelsController = new HGChannelsController();
             WorldController = new HGWorldController();
 
-            await Start(minigameParams[0]);
+            await StartAsync(minigameParams[0]);
         }
         protected override async Task OnFinalized()
         {
@@ -49,30 +50,30 @@ namespace StarArisingBot.Minigames.HungerGames
 
         //============================================//
 
-        private async Task Start(int amount)
+        private async Task StartAsync(int amount)
         {
             PlayersAmount = amount;
 
             BuildPlayers(PlayersBuildType.PerNumbers);
-            await BuildChannels();
+            await BuildChannelsAsync();
 
             await FinalConfigAsync();
         }
-        private async Task Start(IEnumerable<DiscordUser> users)
+        private async Task StartAsync(IEnumerable<DiscordUser> users)
         {
             UsersAmount = new List<DiscordUser>(users);
 
             BuildPlayers(PlayersBuildType.PerUsers);
-            await BuildChannels();
+            await BuildChannelsAsync();
 
             await FinalConfigAsync();
         }
-        private async Task Start(IEnumerable<DiscordMember> members)
+        private async Task StartAsync(IEnumerable<DiscordMember> members)
         {
             UsersAmount = new List<DiscordUser>(members);
 
             BuildPlayers(PlayersBuildType.PerUsers);
-            await BuildChannels();
+            await BuildChannelsAsync();
 
             await FinalConfigAsync();
         }
@@ -80,7 +81,9 @@ namespace StarArisingBot.Minigames.HungerGames
         private async Task FinalConfigAsync()
         {
             await Context.Channel.SendMessageAsync($"\n**ESTÁ TUDO PRONTO** \nVão para o canal <#{ChannelsController.GameChannel.Id}>");
-            await MessagesController.Start();
+
+            await MessagesController.StartMessage();
+            await GameStartAsync();
         }
 
         private void BuildPlayers(PlayersBuildType buildType)
@@ -114,16 +117,65 @@ namespace StarArisingBot.Minigames.HungerGames
 
             PlayersController.SetLivingPlayers(new List<HGPlayer>(PlayersController.TotalPlayers));
         }
-        private async Task BuildChannels()
+        private async Task BuildChannelsAsync()
         {
             ChannelsController.SetGameCategoryChannel(await Context.Guild.CreateChannelCategoryAsync("🏹 ▸ HUNGER GAMES ◂ 🏹"));
             ChannelsController.SetGameChannel(await Context.Guild.CreateChannelAsync("🏹-》hunger-games", ChannelType.Text, ChannelsController.GameCategory, "Welcome do Hunger Games Simulator, See this huge heart-shaking event"));
         }
 
         //============================================//
-        public async Task EndMinigame()
+
+        private async Task GameStartAsync()
         {
+            try
+            {
+                //Ainda há jogadores vivos
+                while (PlayersController.LivingPlayers.Count > 1)
+                {
+                    Thread.Sleep(2000);
+
+                    //Enviar mensagem do estado atual do dia
+                    if (WorldController.IsDay)
+                    {
+                        await ChannelsController.GameChannel.SendMessageAsync(MessagesController.NewDayMessage());
+                        Thread.Sleep(2000);
+
+                        //Jogadores vivos
+                        await ChannelsController.GameChannel.SendMessageAsync(MessagesController.LivingPlayersListMessage());
+                    }
+                    else
+                    {
+                        await ChannelsController.GameChannel.SendMessageAsync(MessagesController.NewNightMessage());
+                    }
+
+                    Thread.Sleep(5000);
+
+                    //Ainda há dialogos faltando
+                    while (WorldController.RemainingDialogues > 0)
+                    {
+                        if (PlayersController.LivingPlayers.Count == 1)
+                            break;
+
+                        await ChannelsController.GameChannel.SendMessageAsync(MessagesController.PlayerActionMessage());
+                        WorldController.RemainingDialogues--;
+
+                        Thread.Sleep(5000);
+                    }
+
+                    WorldController.SwapDayState();
+
+                    if (WorldController.IsDay) WorldController.CurrentDay++;
+                }
+            }
+            catch (Exception e)
+            {
+                await ChannelsController.GameChannel.SendMessageAsync(e.ToString());
+            }
+
+            await ChannelsController.GameChannel.SendMessageAsync(MessagesController.PlayerWinsMessage());
             await FinalizeMinigameAsync();
         }
+
+        //============================================//
     }
 }

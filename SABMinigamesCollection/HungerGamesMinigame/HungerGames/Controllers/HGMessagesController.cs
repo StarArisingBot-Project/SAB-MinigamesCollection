@@ -17,75 +17,16 @@ namespace StarArisingBot.Minigames.HungerGames
             context = context;
         }
 
-        public async Task Start()
+        public async Task StartMessage()
         {
             await hgMinigame.ChannelsController.GameChannel.SendMessageAsync(GameStartMessage());
             Thread.Sleep(1000);
             await hgMinigame.ChannelsController.GameChannel.SendMessageAsync("\n**OS JOGOS COMEÇARÃO EM 10 SEGUNDOS** \n");
             Thread.Sleep(9000);
-
-            try
-            {
-                await HistoryStart();
-            }
-            catch (Exception e)
-            {
-                await hgMinigame.ChannelsController.GameChannel.SendMessageAsync(e.ToString());
-            }
-        }
-        private async Task HistoryStart()
-        {
-            try
-            {
-                //Ainda há jogadores vivos
-                while (hgMinigame.PlayersController.LivingPlayers.Count > 1)
-                {
-                    Thread.Sleep(2000);
-
-                    //Enviar mensagem do estado atual do dia
-                    if (hgMinigame.WorldController.IsDay)
-                    {
-                        await hgMinigame.ChannelsController.GameChannel.SendMessageAsync(NewDayMessage());
-                        Thread.Sleep(2000);
-
-                        //Jogadores vivos
-                        await hgMinigame.ChannelsController.GameChannel.SendMessageAsync(LivingPlayersListMessage());
-                    }
-                    else
-                    {
-                        await hgMinigame.ChannelsController.GameChannel.SendMessageAsync(NewNightMessage());
-                    }
-
-                    Thread.Sleep(5000);
-
-                    //Ainda há dialogos faltando
-                    while (hgMinigame.WorldController.RemainingDialogues > 0)
-                    {
-                        if (hgMinigame.PlayersController.LivingPlayers.Count == 1)
-                            break;
-
-                        await hgMinigame.ChannelsController.GameChannel.SendMessageAsync(PlayerActionMessage());
-                        hgMinigame.WorldController.RemainingDialogues--;
-
-                        Thread.Sleep(5000);
-                    }
-
-                    hgMinigame.WorldController.SwapDayState();
-
-                    if (hgMinigame.WorldController.IsDay) hgMinigame.WorldController.CurrentDay++;
-                }
-            }
-            catch (Exception e)
-            {
-                await hgMinigame.ChannelsController.GameChannel.SendMessageAsync(e.ToString());
-            }
-
-            await hgMinigame.ChannelsController.GameChannel.SendMessageAsync(PlayerWinsMessage());
-            await hgMinigame.EndMinigame();
         }
 
         //==============================//
-        private DiscordMessageBuilder GameStartMessage()
+        public DiscordMessageBuilder GameStartMessage()
         {
             DiscordMessageBuilder result = new DiscordMessageBuilder();
             DiscordEmbedBuilder startGameEmbed = new DiscordEmbedBuilder();
@@ -98,7 +39,7 @@ namespace StarArisingBot.Minigames.HungerGames
             result.WithEmbed(startGameEmbed);
             return result;
         }
-        private DiscordMessageBuilder NewDayMessage()
+        public DiscordMessageBuilder NewDayMessage()
         {
             DiscordMessageBuilder result = new DiscordMessageBuilder();
             DiscordEmbedBuilder newDayEmbed = new DiscordEmbedBuilder();
@@ -111,7 +52,7 @@ namespace StarArisingBot.Minigames.HungerGames
             result.AddEmbed(newDayEmbed);
             return result;
         }
-        private DiscordMessageBuilder NewNightMessage()
+        public DiscordMessageBuilder NewNightMessage()
         {
             DiscordMessageBuilder result = new();
             DiscordEmbedBuilder newNightEmbed = new();
@@ -123,7 +64,7 @@ namespace StarArisingBot.Minigames.HungerGames
             result.AddEmbed(newNightEmbed);
             return result;
         }
-        private DiscordMessageBuilder LivingPlayersListMessage()
+        public DiscordMessageBuilder LivingPlayersListMessage()
         {
             hgMinigame.PlayersController.LivingPlayers.Sort(new Comparison<HGPlayer>((i1, i2) => i2.TotalKills.CompareTo(i1.TotalKills)));
 
@@ -152,7 +93,7 @@ namespace StarArisingBot.Minigames.HungerGames
             return result;
         }
 
-        private DiscordMessageBuilder PlayerActionMessage()
+        public DiscordMessageBuilder PlayerActionMessage()
         {
             HGPlayer playerSelected = hgMinigame.PlayersController.GetCurrentActionPlayer();
             HGMessage playerAction = playerSelected.GetRandomAction(hgMinigame);
@@ -187,7 +128,7 @@ namespace StarArisingBot.Minigames.HungerGames
             result.AddEmbed(embedAction);
             return result;
         }
-        private DiscordMessageBuilder PlayerWinsMessage()
+        public DiscordMessageBuilder PlayerWinsMessage()
         {
             DiscordMessageBuilder result = new DiscordMessageBuilder();
             DiscordEmbedBuilder winEmbed = new DiscordEmbedBuilder();
@@ -201,5 +142,7 @@ namespace StarArisingBot.Minigames.HungerGames
             result.AddEmbed(winEmbed);
             return result;
         }
+
+        //==============================//
     }
 }
